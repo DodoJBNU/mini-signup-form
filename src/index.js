@@ -1,7 +1,4 @@
-// TODO: 이 곳에 정답 코드를 작성해주세요.
-// 1. autofocus 구현
-// 대상 : ID 입력 input
-// 이벤트 : 페이지가 로드 되었을 때
+// 1. autofocus 구현heckMs
 
 // 핸들러: Focus()
 const $id = document.getElementById('id')
@@ -11,9 +8,6 @@ window.addEventListener('load', () => {
 })
 
 // 2. 유효성 검사 로직
-// 대상: ID, PW,PW 확인 input
-// 이벤트 : (1)input의 focus out시, (2)가입하기 버튼 눌렀을 때.
-// 핸들러 : (1)해당 input의 유효성 검사. (2) 모든 필드의 유효성 검사.
 
 const $pw = document.getElementById('pw')
 const $pwMsg = document.getElementById('pw-msg')
@@ -24,87 +18,53 @@ const $pwCheckMsg = document.getElementById('pw-check-msg')
 const ID_REGEX = new RegExp('^[a-z0-9_-]{5,20}$')
 const PW_REGEX = new RegExp('^[a-zA-Z0-9]{8,16}$')
 
-const ID_ERROR_MSG = {
-    required: '필수 정보입니다.',
-    invalid: '5~20자의 영문 소문자, 숫자와 특수기호(_),(-)만 사용 가능합니다.',
+const ERROR_MSG = {
+    required:'필수 정보입니다.',
+    invalidId:'5~20자의 영문 소문자, 숫자와 특수기호(_),(-)만 사용 가능합니다.',
+    invalidPw:'8~16자 영문 대 소문자, 숫자를 사용하세요.',
+    invalidPwCheck:'비밀번호가 일치하지 않습니다.'
 }
 
-const checkIdRegex = (value) => {
-    if (value.length === 0) {
+
+const checkRegex = (target) => {
+    const {value, id} = target // destructuring 구조분해 할당
+    // const value = target.value; const id = target.id
+    if(value.length === 0){
         return 'required'
     } else {
-        return ID_REGEX.test(value) ? true : 'invalid'
-    }
-}
-const checkIdValidation = (value) => {
-    //console.log(e.target.value)
-    //console.log($id.value)
-    const isValidId = checkIdRegex(value)
-    // 3. 커스텀 에러 메시지 추가.
-    if (isValidId !== true) {
-        $id.classList.add('border-red-600')
-        $idMsg.innerText = ID_ERROR_MSG[isValidId]
-    } else {
-        $id.classList.remove('border-red-600')
-        $idMsg.innerText = ''
-    }
-    return isValidId
-}
-$id.addEventListener('focusout', () => checkIdValidation($id.value))
-
-const PW_ERROR_MSG = {
-    required: '필수 정보입니다.',
-    invalid: '8~16자 영문 대 소문자, 숫자를 사용하세요.',
-}
-
-const checkPwRegex = (value) => {
-    if (value.length === 0) {
-        return 'required'
-    } else {
-        return PW_REGEX.test(value) ? true : 'invalid'
+        switch(id) {
+            case 'id':
+                return ID_REGEX.test(value) ? true : 'invalidId'
+            case 'pw':
+                return PW_REGEX.test(value) ? true : 'invalidPw'
+            case 'pw-check':
+                return $pw.value === value ? true : 'invalidPwCheck'
+        }
     }
 }
 
-const checkPwValidation = (value) => {
-    // 3. 커스텀 에러 메시지 추가.
-    const isValidPw = checkPwRegex(value)
-    if (isValidPw !== true) {
-        $pw.classList.add('border-red-600')
-        $pwMsg.innerText = PW_ERROR_MSG[isValidPw]
+const checkValidation = (target, msgTarget) =>{
+    const isValid = checkRegex(target)
+    
+    if(isValid !== true){
+        target.classList.add('border-red-600')
+        msgTarget.innerText = ERROR_MSG[isValid]
     } else {
-        $pw.classList.remove('border-red-600')
-        $pwMsg.innerText = ''
+        target.classList.remove('border-red-600')
+        msgTarget.innerText = ''
     }
-    return isValidPw
-}
-$pw.addEventListener('focusout', () => checkPwValidation($pw.value))
-
-const PW_CHECK_ERROR_MSG = {
-    required: '필수 정보입니다.',
-    invalid: '비밀번호가 일치하지 않습니다.',
+    return isValid
 }
 
-const checkPwCheckRegex = (value) => {
-    if (value.length === 0) {
-        return 'required'
-    } else {
-        return $pw.value === value ? true : 'invalid'
-    }
-}
-const checkPwCheckValidation = (value) => {
-    const isValidPwCheck = checkPwCheckRegex(value)
-    if (isValidPwCheck !== true) {
-        $pwCheck.classList.add('border-red-600')
-        $pwCheckMsg.innerText = PW_CHECK_ERROR_MSG[isValidPwCheck]
-    } else {
-        $pwCheck.classList.remove('border-red-600')
-        $pwCheckMsg.innerText = ''
-    }
-    return isValidPwCheck
-}
+$id.addEventListener('focusout', () => checkValidation($id, $idMsg))
+$pw.addEventListener('focusout', () => checkValidation($pw, $pwMsg))
 $pwCheck.addEventListener('focusout', () =>
-    checkPwCheckValidation($pwCheck.value)
+checkValidation($pwCheck, $pwCheckMsg)
 )
+
+
+
+
 
 // 4. 입력 확인 모달 창 구현
 const $submit = document.getElementById('submit')
@@ -119,9 +79,9 @@ const $approveBtn = document.getElementById('approve-btn')
 $submit.addEventListener('click', (e) => {
     e.preventDefault()
     const isValidForm =
-        checkIdValidation($id.value) === true &&
-        checkPwValidation($pw.value) === true &&
-        checkPwCheckValidation($pwCheck.value) === true
+        checkValidation($id, $idMsg) === true &&
+        checkValidation($pw, $pwMsg) === true &&
+        checkValidation($pwCheck, $pwCheck) === true
     if (isValidForm) {
         $confirmId.innerText = $id.value
         $confirmPw.innerText = $pw.value
